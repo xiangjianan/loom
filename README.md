@@ -5,10 +5,10 @@
 ## 网站与部署
 
 - 前端：GitHub Pages，发布 `main` 分支的 `/docs`。
-- 后端：`https://loom-model-workbench.xiang9872.chatgpt.site`，由 Cloudflare Worker 转发模型请求。
-- GitHub Pages 不能运行服务端代码，所以聊天和在线模型列表依赖独立 Worker。源码包含 `api.js` 和 `worker/index.js`。
+- 后端：`https://relay.minidesk.online:8443/loom`，部署在阿里云服务器，Node.js 转发模型请求。
+- GitHub Pages 不能运行服务端代码，所以聊天和在线模型列表依赖独立 Node.js 服务。源码包含 `api.js` 和 `relay/` 部署文件。
 - 浏览器只向指定服务商转发用户提供的 Key；服务端不保存 Key 或对话，也不记录请求内容。
-- CORS 允许 `https://xiangjianan.github.io` 和后端同源。CORS 不是身份验证，公开后端请求仍需用户自己的服务商 API Key。不要在源码中配置共享模型密钥。
+- CORS 允许 `https://xiangjianan.github.io` 、原 Sites 前端和后端同源。CORS 不是身份验证，公开后端请求仍需用户自己的服务商 API Key。不要在源码中配置共享模型密钥。
 
 ## 本地开发
 
@@ -23,8 +23,14 @@ node preview.mjs
 
 ## 更新
 
-修改 `shell.html`、`style.css`、`app.js` 或 `api.js`，运行 `npm run build` 后提交、推送。`docs/index.html` 是自包含的静态产物，无 CDN 运行时依赖。后端修改需单独发布 Worker；GitHub Pages 只更新前端。
+修改 `shell.html`、`style.css`、`app.js` 或 `api.js`，运行 `npm run build` 后提交、推送。`docs/index.html` 是自包含的静态产物，无 CDN 运行时依赖。后端修改需单独部署阿里云服务；GitHub Pages 只更新前端。
 
 ## 本地数据
 
 模型配置（包括 API Key）、草稿、高亮与历史记录保存在当前网站域名的 localStorage。不同域名的数据互相隔离。旧 Sites 域名的数据不会自动出现在 GitHub Pages。清除浏览器网站数据会删除记录。仓库中不包含真实 API Key 或用户对话。
+
+## 阿里云后端
+
+服务目录 `/opt/loom-relay`，监听 `127.0.0.1:8791`，由现有 Nginx 的 8443 虚拟主机代理 `/loom/`。独立 systemd 服务 `loom-relay` 支持开机启动和故障重启。复用现有 TLS 证书，现有域名的其他路由不变。
+
+更新：运行 `npm run build`，将 `relay/*.mjs` 上传到 `/opt/loom-relay/`，再执行 `systemctl restart loom-relay`。部署模板见 `relay/loom-relay.service` 和 `relay/nginx-location.conf`。健康检查：`GET /loom/health`。不记录请求内容，不保存模型密钥。请求大小限制 2 MB，拒绝内网地址并固定经过验证的 DNS 解析结果。
