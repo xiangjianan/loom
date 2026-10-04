@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/prepare.mjs && bash scripts/build.sh",
-    "test": "node scripts/test.mjs && node scripts/test-storage.mjs && node scripts/test-proxy.mjs && node scripts/test-models.mjs",
+    "test": "node scripts/test.mjs && node scripts/test-storage.mjs && node scripts/test-proxy.mjs && node scripts/test-models.mjs && node scripts/test-scroll.mjs && node scripts/test-retry.mjs",
     "validate": "node scripts/validate-artifact.mjs"
   },
   "dependencies": {
