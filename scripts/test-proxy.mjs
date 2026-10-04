@@ -1,0 +1,6 @@
+import assert from 'node:assert/strict';import worker from '../worker/index.js';
+const orig=globalThis.fetch,req=()=>new Request('https://loom.test/api/chat',{method:'POST',body:JSON.stringify({endpoint:'https://api.deepseek.com/v1',key:'test-key',model:'deepseek-chat',messages:[{role:'user',content:'ping'}]})});
+let reached=false;globalThis.fetch=async(url,options)=>{if(options.redirect==='error')throw TypeError('Invalid redirect value');assert.equal(options.redirect,'manual');reached=true;return Response.json({choices:[{message:{content:'OK'}}]})};let r=await worker.fetch(req());assert.equal(r.status,200);assert.equal((await r.json()).choices[0].message.content,'OK');assert(reached);
+for(const status of [401,403,404,429,503]){globalThis.fetch=async()=>Response.json({error:{message:'Upstream error'}},{status});r=await worker.fetch(req());assert.equal(r.status,status);assert.equal((await r.json()).upstream_status,status)}
+globalThis.fetch=async()=>new Response(null,{status:302,headers:{Location:'https://other.test/'}});r=await worker.fetch(req());assert.equal((await r.json()).code,'UPSTREAM_REDIRECT');
+globalThis.fetch=async()=>new Response('<html>error</html>',{status:502});r=await worker.fetch(req());assert.equal((await r.json()).code,'UPSTREAM_FORMAT');globalThis.fetch=orig;console.log('PASS: 线上重定向模式兼容、成功响应、服务商错误码保留、拒绝跟随重定向、非 JSON 错误处理');
