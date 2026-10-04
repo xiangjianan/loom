@@ -1,9 +1,10 @@
 {
-  "name": "sites-worker-esm-starter",
+  "name": "loom-workbench",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bash scripts/build.sh",
+    "build": "node scripts/prepare.mjs && bash scripts/build.sh",
+    "test": "node scripts/test.mjs && node scripts/test-storage.mjs && node scripts/test-proxy.mjs && node scripts/test-models.mjs",
     "validate": "node scripts/validate-artifact.mjs"
   },
   "dependencies": {
