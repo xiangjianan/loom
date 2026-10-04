@@ -1,6 +1,6 @@
 import fs from 'node:fs';import assert from 'node:assert/strict';import {JSDOM} from 'jsdom';
 const html=fs.readFileSync('page.html','utf8'),key='loom.workspace.v1';
-function boot(saved,{broken=false}={}){return new JSDOM(html,{runScripts:'dangerously',url:'https://loom.test/',beforeParse(w){w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};w.matchMedia=()=>({matches:false});w.HTMLElement.prototype.scrollTo=function(o){this.scrollTop=o.top};if(saved)w.localStorage.setItem(key,saved);if(broken)w.Storage.prototype.setItem=function(){throw Error('quota')};}})}
+function boot(saved,{broken=false}={}){return new JSDOM(html,{runScripts:'dangerously',url:'https://loom.test/',beforeParse(w){w.localStorage.setItem('loom.language','zh');w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};w.matchMedia=()=>({matches:false});w.HTMLElement.prototype.scrollTo=function(o){this.scrollTop=o.top};if(saved)w.localStorage.setItem(key,saved);if(broken)w.Storage.prototype.setItem=function(){throw Error('quota')};}})}
 let dom=boot(),w=dom.window,d=w.document;const $=id=>d.getElementById(id);
 for(let i=0;i<3;i++){w.openConfig(i);$('key').value='test-key-'+i;$('save').click()}
 const mock=async()=>({ok:true,json:async()=>({choices:[{message:{content:'## 结果\n\n第一轮 **重要回答**'}}]})});w.fetch=mock;

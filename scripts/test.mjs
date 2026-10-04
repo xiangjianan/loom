@@ -1,5 +1,5 @@
 import fs from 'node:fs';import assert from 'node:assert/strict';import {JSDOM} from 'jsdom';import worker from '../worker/index.js';
-const dom=new JSDOM(fs.readFileSync('page.html','utf8'),{runScripts:'dangerously',url:'https://loom.test/',beforeParse(w){w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};w.matchMedia=()=>({matches:false});w.HTMLElement.prototype.scrollTo=function(options){this.scrollTop=options.top};}});
+const dom=new JSDOM(fs.readFileSync('page.html','utf8'),{runScripts:'dangerously',url:'https://loom.test/',beforeParse(w){w.localStorage.setItem('loom.language','zh');w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};w.matchMedia=()=>({matches:false});w.HTMLElement.prototype.scrollTo=function(options){this.scrollTop=options.top};}});
 const w=dom.window,d=w.document,$=id=>d.getElementById(id),click=id=>$(id).click();
 assert.equal(d.querySelectorAll('.column').length,3);
 for(let i=0;i<3;i++){w.openConfig(i);$('provider').value='DeepSeek';$('provider').dispatchEvent(new w.Event('change'));assert.equal($('endpoint').value,'https://api.deepseek.com/v1');$('key').value='test';click('save')}
