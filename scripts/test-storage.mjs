@@ -5,6 +5,14 @@ let dom=boot(),w=dom.window,d=w.document;const $=id=>d.getElementById(id);
 for(let i=0;i<3;i++){w.openConfig(i);$('key').value='test-key-'+i;$('save').click()}
 const mock=async()=>({ok:true,json:async()=>({choices:[{message:{content:'## 结果\n\n第一轮 **重要回答**'}}]})});w.fetch=mock;
 $('prompt').value='第一段对话';await w.send();const p=d.querySelector('.answer p'),range=d.createRange();range.selectNodeContents(p);w.getSelection().addRange(range);p.dispatchEvent(new w.MouseEvent('mouseup',{bubbles:true}));$('prompt').value='未发送草稿';$('prompt').dispatchEvent(new w.Event('input'));
+const originalIDs=JSON.parse(w.localStorage.getItem(key)).sessions[0].cols.map(c=>c.id);
+d.querySelector('.move-model[data-i="0"][data-offset="1"]').click();
+assert.deepEqual(JSON.parse(w.localStorage.getItem(key)).sessions[0].cols.map(c=>c.id),[originalIDs[1],originalIDs[0],originalIDs[2]]);
+let copiedText;Object.defineProperty(w.navigator,'clipboard',{value:{writeText:async text=>{copiedText=text}}});
+const copyButton=d.querySelector('[data-copy-col]');copyButton.click();await new Promise(resolve=>setTimeout(resolve,0));
+assert.equal(copiedText,'第一段对话');assert.equal(copyButton.textContent,'已复制');
+// Move back so existing model-index checks continue to verify their original configuration.
+d.querySelector('.move-model[data-i="1"][data-offset="-1"]').click();
 let saved=w.localStorage.getItem(key),firstId=JSON.parse(saved).currentId;dom.window.close();dom=boot(saved);w=dom.window;d=w.document;
 assert.match($('settings').textContent,/模型配置成功/);w.openConfig(1);assert.equal($('key').value,'test-key-1');$('close').click();assert.equal(d.querySelectorAll('.answer').length,3);assert(d.querySelector('mark'));assert.equal(d.querySelectorAll('.chip').length,1);assert.equal($('prompt').value,'未发送草稿');
 $('new').click();assert.equal(d.querySelectorAll('.answer').length,0);assert.equal($('prompt').value,'');w.openConfig(1);assert.equal($('key').value,'test-key-1');$('close').click();w.fetch=mock;$('prompt').value='第二段对话';await w.send();$('history-open').click();assert.equal(d.querySelectorAll('.history-item').length,2);$('history-search').value='第一段';$('history-search').dispatchEvent(new w.Event('input'));assert.equal(d.querySelectorAll('.history-item').length,1);d.querySelector('.history-item').click();assert.equal($('chat-title').textContent,'第一段对话');assert.equal($('prompt').value,'未发送草稿');assert(d.querySelector('mark'));assert.equal(d.querySelectorAll('.round-link').length,3);
